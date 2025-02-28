@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tic Tack Toe</title>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game">
+      <div class="game__container">
+        <section class="menu">
+          <div class="menu__select">
+            <h1 class="menu__heading">Pick player 1's mark</h1>
+            <div class="menu__mark-group">
+              <label
+                class="menu__label input-mark input-mark--x menu__input menu__input--x"
+                for="x-mark"
+                data-checked="false"
+              >
+                <input type="radio" id="x-mark" class="" name="player-mark" />
+              </label>
+              <label
+                class="menu__label input-mark input-mark--ring menu__input menu__input--ring"
+                for="ring-mark"
+                data-checked="true"
+              >
+                <input
+                  type="radio"
+                  id="ring-mark"
+                  class=""
+                  name="player-mark"
+                />
+              </label>
+            </div>
+            <p class="description">remember : X goes first</p>
+          </div>
+          <button
+            class="menu__btn btn btn--secondary btn--full btn--shadow-secondary"
+          >
+            NEW GAME (VS CPU)
+          </button>
+
+          <button
+            class="menu__btn btn btn--primary btn--full btn--shadow-primary"
+          >
+            NEW GAME (VS PLAYER)
+          </button>
+        </section>
+
+        <section class="board">
+          <div class="board__control">
+            <div class="board__control-mark">
+              <span
+                class="board__control-mark--x input-mark input-mark--x"
+              ></span>
+              <span
+                class="board__control-mark--ring input-mark input-mark--ring"
+              ></span>
+            </div>
+
+            <div class="board__turn">
+              <span
+                class="board__turn-mark board__turn-mark--x input-mark input-mark--x"
+              ></span>
+              <span
+                class="board__turn-mark board__turn-mark--ring input-mark input-mark--ring"
+              ></span>
+              <span class="board__turn-text">Turn</span>
+            </div>
+
+            <button
+              class="board__control-btn btn btn--light btn--sm btn--shadow-light btn--icon"
+            >
+              <img
+                src="/reset-arrow.svg"
+                alt=""
+                width="20"
+                height="20"
+                class="board__icon"
+              />
+            </button>
+          </div>
+
+          <div class="board__moves">
+            <label class="board__moves-label" for="cpu">
+              <input
+                type="radio"
+                id="cpu"
+                class="input-mark board__moves-input board__moves-input--x"
+              />
+            </label>
+            <label class="board__moves-label" for="player">
+              <input
+                type="radio"
+                id="player"
+                class="input-mark board__moves-input board__moves-input--ring"
+              />
+            </label>
+            <label class="board__moves-label" for="player">
+              <input
+                type="radio"
+                id="player"
+                class="input-mark board__moves-input board__moves-input--ring"
+              />
+            </label>
+            <label class="board__moves-label" for="cpu">
+              <input
+                type="radio"
+                id="cpu"
+                class="input-mark board__moves-input board__moves-input--x"
+              />
+            </label>
+            <label class="board__moves-label" for="player">
+              <input
+                type="radio"
+                id="player"
+                class="input-mark board__moves-input board__moves-input--ring"
+              />
+            </label>
+            <label class="board__moves-label" for="player">
+              <input
+                type="radio"
+                id="player"
+                class="input-mark board__moves-input board__moves-input--ring"
+              />
+            </label>
+            <label class="board__moves-label" for="cpu">
+              <input
+                type="radio"
+                id="cpu"
+                class="input-mark board__moves-input board__moves-input--x"
+              />
+            </label>
+            <label class="board__moves-label" for="player">
+              <input
+                type="radio"
+                id="player"
+                class="input-mark board__moves-input board__moves-input--ring"
+              />
+            </label>
+            <label class="board__moves-label" for="player">
+              <input
+                type="radio"
+                id="player"
+                class="input-mark board__moves-input board__moves-input--ring"
+              />
+            </label>
+          </div>
+
+          <div class="board__scores">
+            <div class="board__scores-card board__scores-card--player">
+              <span class="board__scores-title">x (you)</span>
+              <span class="board__scores-number">14</span>
+            </div>
+
+            <div class="board__scores-card board__scores-card--ties">
+              <span class="board__scores-title">ties</span>
+              <span class="board__scores-number">32</span>
+            </div>
+
+            <div class="board__scores-card board__scores-card--cpu">
+              <span class="board__scores-title">o (cpu)</span>
+              <span class="board__scores-number">14</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="modal modal-restart">
+          <h2 class="modal__headline">Restart Game?</h2>
+
+          <div class="modal__button-group">
+            <button class="modal__btn btn btn--light btn--sm">
+              No, Cancel
+            </button>
+            <button class="modal__btn btn btn--secondary btn--sm">
+              Yes, Restart
+            </button>
+          </div>
+        </div>
+
+        <div class="modal modal-over">
+          <p class="modal__outcome">You Won!</p>
+          <h2 class="modal__headline modal-over__headline">
+            <div class="modal__next-mark">
+              <span
+                class="modal__mark modal__mark--x input-mark input-mark--x"
+              ></span>
+              <span
+                class="modal__mark modal__mark--ring input-mark input-mark--ring"
+              ></span>
+            </div>
+
+            <span>Takes The Round</span>
+          </h2>
+          <div class="modal__button-group">
+            <button class="modal__btn btn btn--light btn--sm btn--shadow-light">
+              Quit
+            </button>
+            <button
+              class="modal__btn btn btn--secondary btn--sm btn--shadow-secondary"
+            >
+              Next Round
+            </button>
+          </div>
+        </div>
+        <div class="game__overlay"></div>
+      </div>
+    </main>
+  </body>
+</html>
