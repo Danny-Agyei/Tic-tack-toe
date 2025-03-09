@@ -10,46 +10,58 @@
   <body>
     <main class="game">
       <div class="game__container">
-        <section class="menu">
+        <section class="js-menu menu">
           <div class="menu__select">
             <h1 class="menu__heading">Pick player 1's mark</h1>
             <div class="menu__mark-group">
               <label
-                class="menu__label input-mark input-mark--x menu__input menu__input--x"
-                for="x-mark"
+                class="js-menu-label menu__label menu__input menu__input--x input-mark input-mark--x"
+                for="mark--x"
                 data-checked="false"
-              >
-                <input type="radio" id="x-mark" class="" name="player-mark" />
-              </label>
-              <label
-                class="menu__label input-mark input-mark--ring menu__input menu__input--ring"
-                for="ring-mark"
-                data-checked="true"
+                data-input-ref="mark--x"
               >
                 <input
                   type="radio"
-                  id="ring-mark"
-                  class=""
-                  name="player-mark"
+                  id="mark--x"
+                  class="js-menu-input"
+                  name="mark"
+                  data-name="mark--x"
+                />
+              </label>
+              <label
+                class="js-menu-label menu__label menu__input menu__input--ring input-mark input-mark--ring"
+                for="mark--ring"
+                data-checked="true"
+                data-input-ref="mark--ring"
+              >
+                <input
+                  type="radio"
+                  id="mark--ring"
+                  class="js-menu-input"
+                  name="mark"
+                  data-name="mark--ring"
+                  checked
                 />
               </label>
             </div>
             <p class="description">remember : X goes first</p>
           </div>
           <button
-            class="menu__btn btn btn--secondary btn--full btn--shadow-secondary"
+            class="js-menu-button menu__btn btn btn--secondary btn--full btn--shadow-secondary"
+            data-opponent="cpu"
           >
             NEW GAME (VS CPU)
           </button>
 
           <button
-            class="menu__btn btn btn--primary btn--full btn--shadow-primary"
+            class="js-menu-button menu__btn btn btn--primary btn--full btn--shadow-primary"
+            data-opponent="p2"
           >
-            NEW GAME (VS PLAYER)
+            NEW GAME (VS PLAYER 2)
           </button>
         </section>
 
-        <section class="board">
+        <section class="board board--hidden js-board">
           <div class="board__control">
             <div class="board__control-mark">
               <span
@@ -60,18 +72,12 @@
               ></span>
             </div>
 
-            <div class="board__turn">
-              <span
-                class="board__turn-mark board__turn-mark--x input-mark input-mark--x"
-              ></span>
-              <span
-                class="board__turn-mark board__turn-mark--ring input-mark input-mark--ring"
-              ></span>
+            <div class="board__turn js-board-turn">
               <span class="board__turn-text">Turn</span>
             </div>
 
             <button
-              class="board__control-btn btn btn--light btn--sm btn--shadow-light btn--icon"
+              class="js-modal-trigger board__control-btn btn btn--light btn--sm btn--shadow-light btn--icon"
             >
               <img
                 src="/reset-arrow.svg"
@@ -83,105 +89,55 @@
             </button>
           </div>
 
-          <div class="board__moves">
-            <label class="board__moves-label" for="cpu">
-              <input
-                type="radio"
-                id="cpu"
-                class="input-mark board__moves-input board__moves-input--x"
-              />
-            </label>
-            <label class="board__moves-label" for="player">
-              <input
-                type="radio"
-                id="player"
-                class="input-mark board__moves-input board__moves-input--ring"
-              />
-            </label>
-            <label class="board__moves-label" for="player">
-              <input
-                type="radio"
-                id="player"
-                class="input-mark board__moves-input board__moves-input--ring"
-              />
-            </label>
-            <label class="board__moves-label" for="cpu">
-              <input
-                type="radio"
-                id="cpu"
-                class="input-mark board__moves-input board__moves-input--x"
-              />
-            </label>
-            <label class="board__moves-label" for="player">
-              <input
-                type="radio"
-                id="player"
-                class="input-mark board__moves-input board__moves-input--ring"
-              />
-            </label>
-            <label class="board__moves-label" for="player">
-              <input
-                type="radio"
-                id="player"
-                class="input-mark board__moves-input board__moves-input--ring"
-              />
-            </label>
-            <label class="board__moves-label" for="cpu">
-              <input
-                type="radio"
-                id="cpu"
-                class="input-mark board__moves-input board__moves-input--x"
-              />
-            </label>
-            <label class="board__moves-label" for="player">
-              <input
-                type="radio"
-                id="player"
-                class="input-mark board__moves-input board__moves-input--ring"
-              />
-            </label>
-            <label class="board__moves-label" for="player">
-              <input
-                type="radio"
-                id="player"
-                class="input-mark board__moves-input board__moves-input--ring"
-              />
-            </label>
-          </div>
+          <div class="board__moves js-board-moves"></div>
 
-          <div class="board__scores">
-            <div class="board__scores-card board__scores-card--player">
-              <span class="board__scores-title">x (you)</span>
-              <span class="board__scores-number">14</span>
+          <div class="board__wins">
+            <div class="board__wins-card board__wins-card--player">
+              <span id="js-wins-title-p1" class="board__wins-title"
+                >o (you)</span
+              >
+              <span id="js-wins-p1" class="board__wins-number">0</span>
             </div>
 
-            <div class="board__scores-card board__scores-card--ties">
-              <span class="board__scores-title">ties</span>
-              <span class="board__scores-number">32</span>
+            <div class="board__wins-card board__wins-card--ties">
+              <span class="board__wins-title">ties</span>
+              <span id="js-ties" class="board__wins-number">0</span>
             </div>
 
-            <div class="board__scores-card board__scores-card--cpu">
-              <span class="board__scores-title">o (cpu)</span>
-              <span class="board__scores-number">14</span>
+            <div class="board__wins-card board__wins-card--opponent">
+              <span id="js-wins-title-opponent" class="board__wins-title"
+                >x (cpu)</span
+              >
+              <span id="js-wins-opponent" class="board__wins-number">0</span>
             </div>
           </div>
         </section>
 
-        <div class="modal modal-restart">
+        <div
+          aria-label="Restart Game Modal"
+          id="js-modal-restart"
+          class="modal modal-restart is-hidden"
+        >
           <h2 class="modal__headline">Restart Game?</h2>
 
           <div class="modal__button-group">
-            <button class="modal__btn btn btn--light btn--sm">
+            <button
+              class="js-modal-trigger modal__btn btn btn--light btn--sm btn--shadow-light"
+            >
               No, Cancel
             </button>
-            <button class="modal__btn btn btn--secondary btn--sm">
+            <button
+              id="js-restart-button"
+              class="modal__btn btn btn--secondary btn--sm btn--shadow-secondary-sm"
+              data-target="modal-restart"
+            >
               Yes, Restart
             </button>
           </div>
         </div>
 
-        <div class="modal modal-over">
-          <p class="modal__outcome">You Won!</p>
+        <div id="js-modal-over" class="modal modal-over is-hidden">
+          <p id="js-round-outcome" class="modal__outcome"></p>
           <h2 class="modal__headline modal-over__headline">
             <div class="modal__next-mark">
               <span
@@ -195,18 +151,26 @@
             <span>Takes The Round</span>
           </h2>
           <div class="modal__button-group">
-            <button class="modal__btn btn btn--light btn--sm btn--shadow-light">
+            <button
+              data-target="modal-over"
+              id="js-quit-button"
+              class="modal__btn btn btn--light btn--sm btn--shadow-light"
+            >
               Quit
             </button>
             <button
-              class="modal__btn btn btn--secondary btn--sm btn--shadow-secondary"
+              id="js-next-button"
+              class="modal__btn btn btn--secondary btn--sm btn--shadow-secondary-sm"
             >
               Next Round
             </button>
           </div>
         </div>
-        <div class="game__overlay"></div>
+        <div id="js-overlay" class="game__overlay is-hidden"></div>
       </div>
     </main>
+
+    <!-- JS script files  -->
+    <script src="/app.js"></script>
   </body>
 </html>
