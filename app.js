@@ -16,6 +16,7 @@ const btnNextRound = document.querySelector("#js-next-button");
 const labelRoundOutcome = document.getElementById("js-round-outcome");
 const labelWinsTotalPlayer = document.querySelector("#js-wins-p1");
 const labelWinsTotalOpponent = document.querySelector("#js-wins-opponent");
+const labelTiesTotal = document.querySelector("#js-ties");
 const labelWinsTitlePlayer = document.querySelector("#js-wins-title-p1");
 const labelWinsTitleOpponent = document.querySelector(
   "#js-wins-title-opponent"
@@ -34,23 +35,23 @@ const winningCombination = [
 
 const initialData = {
   movements: Array.from({ length: 9 }, () => null),
-  p1Mark: "mark--ring",
-  cpuMark: null,
-  p2Mark: null,
-  opponent: null,
   nextRoundPlayerTurn: null,
   currentPlayerTurn: null,
   currentRoundMoves: 0,
   currentRoundWinner: null,
   isGameRoundOver: false,
+  opponent: null,
+  p1Mark: "mark--ring",
+  cpuMark: null,
+  p2Mark: null,
   p1Wins: 0,
   p2Wins: 0,
   cpuWins: 0,
   ties: 0,
 };
 
-let ticTacDB;
 let isGameRoundOver = false;
+let ticTacDB;
 
 /* ///////////////////////// */
 
@@ -69,6 +70,17 @@ function getDataFromDB() {
   if (!localStorage.getItem("ticTacDB")) throw Error("Failed to retrieve Data");
 
   return JSON.parse(localStorage.getItem("ticTacDB"));
+}
+
+/* ///////////////////////// */
+
+function updateDB(data) {
+  if (!data) return;
+  const oldData = getDataFromDB();
+
+  localStorage.setItem("ticTacDB", JSON.stringify({ ...oldData, ...data }));
+
+  ticTacDB = getDataFromDB();
 }
 
 /* ///////////////////////// */
@@ -97,16 +109,19 @@ function setPlayerMark() {
 /* ///////////////////////// */
 
 function changeTurnMark() {
-  const ticTacDB = getDataFromDB();
+  const turnPlayerMark = document.querySelector(".board__turn-mark");
+  ticTacDB = getDataFromDB();
 
-  if (document.querySelector(".board__turn-mark")) {
-    document.querySelector(".board__turn-mark").remove();
-  }
+  if (turnPlayerMark) turnPlayerMark.remove();
 
-  const { currentPlayerTurn: playerTurn, cpuMark, p2Mark, p1Mark } = ticTacDB;
+  const { currentPlayerTurn, cpuMark, p2Mark, p1Mark } = ticTacDB;
 
   const mark =
-    playerTurn === "p1" ? p1Mark : playerTurn === "p2" ? p2Mark : cpuMark;
+    currentPlayerTurn === "p1"
+      ? p1Mark
+      : currentPlayerTurn === "p2"
+      ? p2Mark
+      : cpuMark;
 
   const html = `<span id="js-board-turn-mark" class="board__turn-mark board__turn-${mark} input-mark input-${mark}"></span>`;
 
@@ -115,8 +130,34 @@ function changeTurnMark() {
 
 /* ///////////////////////// */
 
+function switchScreen(screen) {
+  if (!screen) return;
+
+  menuScreen.classList.toggle("menu--hidden", screen === "menu");
+  boardScreen.classList.toggle("board--hidden", screen === "board");
+}
+
+/* ///////////////////////// */
+
+function toggleModal(modal) {
+  if (!modal) return;
+
+  let isHidden = true;
+
+  if (modal === "modal-restart") {
+    isHidden = modalGameRestart.classList.contains("is-hidden");
+    modalGameRestart.classList.toggle("is-hidden", !isHidden);
+  } else if (modal === "modal-over") {
+    isHidden = modalGameOver.classList.contains("is-hidden");
+    modalGameOver.classList.toggle("is-hidden", !isHidden);
+  }
+
+  modalOverlay.classList.toggle("is-hidden", !isHidden);
+}
+
+/* ///////////////////////// */
+
 function startNewGame() {
-  console.log("new game", this);
   const opponent = this.getAttribute("data-opponent");
 
   let { p1Mark, cpuMark, p2Mark, currentPlayerTurn, nextRoundPlayerTurn } =
@@ -149,10 +190,9 @@ function startNewGame() {
   }
 
   isGameRoundOver = false;
-  console.log(ticTacDB);
+
   const updatedData = {
     ...ticTacDB,
-    // ...initialData,
     isGameRoundOver,
     p2Mark,
     cpuMark,
@@ -161,11 +201,16 @@ function startNewGame() {
     nextRoundPlayerTurn,
   };
 
-  localStorage.setItem("ticTacDB", JSON.stringify(updatedData));
-
+  updateDB(updatedData);
   switchScreen("menu");
   changeTurnMark();
   displayGameBoard();
+
+  if (currentPlayerTurn === "cpu") {
+    setTimeout(() => {
+      handleCpuMovement();
+    }, 1200);
+  }
 }
 
 /* ///////////////////////// */
@@ -180,6 +225,7 @@ function displayGameBoard() {
     cpuWins,
     p2Wins,
     p1Wins,
+    ties,
   } = getDataFromDB();
 
   boardMovesContainer.innerHTML = "";
@@ -199,7 +245,7 @@ function displayGameBoard() {
     moveInput.type = "radio";
     moveInput.id = `js-input${i}`;
     moveInput.setAttribute("data-position", i);
-    moveInput.addEventListener("change", makeMove);
+    moveInput.addEventListener("change", handlePlayerMovement);
 
     if (move) {
       const mark = move === "p1" ? p1Mark : move === "p2" ? p2Mark : cpuMark;
@@ -212,24 +258,25 @@ function displayGameBoard() {
     boardMovesContainer.insertAdjacentElement("beforeend", moveLabel);
 
     labelWinsTitlePlayer.textContent = `${
-      p1Mark === "mark--x" ? x : "o"
+      p1Mark === "mark--x" ? "x" : "o"
     } (You)`;
 
-    labelWinsTitleOpponent.textContent = `${p1Mark === "mark--x" ? o : "x"} ${
+    labelWinsTitleOpponent.textContent = `${p1Mark === "mark--x" ? "o" : "x"} ${
       opponent === "cpu" ? "(Cpu)" : "(P2)"
     }`;
   });
 
   labelWinsTotalOpponent.textContent = opponent === "cpu" ? cpuWins : p2Wins;
   labelWinsTotalPlayer.textContent = p1Wins;
+  labelTiesTotal.textContent = ties;
 }
 
 /* ///////////////////////// */
 
-function makeMove() {
+function handlePlayerMovement() {
   if (isGameRoundOver) return;
 
-  const dataFromDB = getDataFromDB();
+  const ticTacDB = getDataFromDB();
 
   let {
     opponent,
@@ -239,7 +286,7 @@ function makeMove() {
     currentPlayerTurn,
     currentRoundMoves,
     movements,
-  } = dataFromDB;
+  } = ticTacDB;
 
   let playerMark;
 
@@ -265,41 +312,151 @@ function makeMove() {
   movements[movePos] = currentPlayerTurn;
   currentRoundMoves += 1;
 
-  localStorage.setItem(
-    "ticTacDB",
-    JSON.stringify({
-      ...dataFromDB,
-      movements,
-      currentPlayerTurn: currentPlayerTurn === "p1" ? opponent : "p1",
-      currentRoundMoves,
-    })
-  );
+  const updatedData = {
+    movements,
+    currentPlayerTurn: currentPlayerTurn === "p1" ? opponent : "p1",
+    currentRoundMoves,
+  };
 
   document
     .getElementById(`js-input${movePos}`)
     .classList.add(`board__moves-${playerMark}`);
 
+  updateDB(updatedData);
+  checkForWinner(currentPlayerTurn);
+
+  // if (currentRoundMoves < 9) {
+  setTimeout(() => {
+    handleCpuMovement();
+  }, 1200);
+  // }
+}
+
+/* ///////////////////////// */
+
+function handleCpuMovement() {
+  if (isGameRoundOver) return;
+
+  function moveToAnyAvailableSpace() {
+    let randomMove = Math.floor(Math.random() * (8 - 0) + 0);
+
+    if (movements[randomMove] !== null) {
+      return movements.some((move, i) => {
+        if (move === null) movements[i] = "cpu";
+      });
+    }
+
+    movements[randomMove] = "cpu";
+  }
+
+  function completeActiveCombination() {
+    let hasOnlyCpuMoves = false;
+    let combinationWithOnlyCpuMoves = [];
+
+    for (const combination of winningCombination) {
+      cpuMovements.forEach((move) => {
+        if (combination.includes(move)) {
+          hasOnlyCpuMoves = combination.every(
+            (comb) => movements[comb] !== "p1"
+          );
+        }
+      });
+
+      if (hasOnlyCpuMoves) {
+        combinationWithOnlyCpuMoves = combination;
+        break;
+      }
+    }
+
+    combinationWithOnlyCpuMoves.some((i) => {
+      if (movements[i] !== "cpu") {
+        movements[i] = "cpu";
+        return true;
+      }
+    });
+  }
+
+  function blockPlayerCombination() {
+    let combinationWithOnlyPlayerMoves = [];
+    let numOfPlayerAppearance = 0;
+
+    for (const combination of winningCombination) {
+      playerMovements.forEach((move) => {
+        if (combination.includes(move)) {
+          combinationWithOnlyPlayerMoves = combination;
+        }
+      });
+
+      combinationWithOnlyPlayerMoves.forEach((move) => {
+        movements[move] === "p1" && ++numOfPlayerAppearance;
+        movements[move] === "cpu" && --numOfPlayerAppearance;
+      });
+
+      if (numOfPlayerAppearance === 2) {
+        combinationWithOnlyPlayerMoves.forEach((move) => {
+          if (movements[move] === null) movements[move] = "cpu";
+        });
+
+        break;
+      } else {
+        numOfPlayerAppearance = 0;
+        combinationWithOnlyPlayerMoves = [];
+      }
+    }
+
+    return combinationWithOnlyPlayerMoves.length > 0;
+  }
+
+  ticTacDB = getDataFromDB();
+  let { currentPlayerTurn, currentRoundMoves, movements } = ticTacDB;
+
+  const getPlayerMovements = (player) => {
+    return movements
+      .map((move, i) => move === player && i)
+      .filter((i) => typeof i === "number");
+  };
+
+  const playerMovements = getPlayerMovements("p1");
+  const cpuMovements = getPlayerMovements("cpu");
+
+  if (currentRoundMoves < 2 || currentRoundMoves === 8) {
+    moveToAnyAvailableSpace();
+  } else {
+    // Check and block player combination
+    const hasBlockMove = blockPlayerCombination();
+
+    !hasBlockMove && completeActiveCombination();
+  }
+
+  currentRoundMoves += 1;
+
+  const updatedData = {
+    movements,
+    currentPlayerTurn: "p1",
+    currentRoundMoves,
+  };
+
+  updateDB(updatedData);
+  displayGameBoard();
   checkForWinner(currentPlayerTurn);
 }
 
 /* ///////////////////////// */
 
 function checkForWinner(currentPlayer) {
-  const ticTacDB = getDataFromDB();
+  ticTacDB = getDataFromDB();
 
   if (!currentPlayer || !ticTacDB) return;
 
-  let { movements, currentRoundWinner } = ticTacDB;
+  let { movements, currentRoundWinner, currentRoundMoves } = ticTacDB;
   let matchedWinningCombination = [];
 
-  // Get all moves made by current player
   const playerSelectedMoves = movements
     .map((move, i) => {
       if (move === currentPlayer) return i;
     })
     .filter((i) => i !== undefined);
 
-  // Check if player moves match any wining combination
   for (const combination of winningCombination) {
     playerSelectedMoves.forEach((move) => {
       if (combination.includes(move)) {
@@ -309,30 +466,52 @@ function checkForWinner(currentPlayer) {
 
     if (combination.join("") === matchedWinningCombination.join("")) {
       isGameRoundOver = true;
-      currentRoundWinner = currentPlayer;
 
-      localStorage.setItem(
-        "ticTacDB",
-        JSON.stringify({ ...ticTacDB, isGameRoundOver, currentRoundWinner })
-      );
-
+      updateDB({
+        isGameRoundOver,
+        currentRoundWinner: currentPlayer,
+      });
+      displayWinner();
       toggleModal("modal-over");
-      return;
+
+      break;
     } else {
       matchedWinningCombination = [];
     }
   }
 
-  !isGameRoundOver && changeTurnMark();
+  if (currentRoundMoves === 9 && !isGameRoundOver) {
+    isGameRoundOver = true;
+    console.log("first");
+
+    updateDB({
+      isGameRoundOver,
+      currentRoundWinner: "draw",
+    });
+    displayWinner();
+    toggleModal("modal-over");
+  }
+
+  if (!isGameRoundOver) changeTurnMark();
 }
 
 /* ///////////////////////// */
 
 function displayWinner() {
-  const ticTacDB = getDataFromDB();
-  let { p1Wins, p2Wins, cpuWins, ties, currentRoundWinner } = ticTacDB;
+  ticTacDB = getDataFromDB();
 
   let outcomeText = "";
+  let {
+    opponent,
+    p1Wins,
+    p2Wins,
+    cpuWins,
+    ties,
+    currentRoundWinner,
+    isGameRoundOver,
+  } = ticTacDB;
+
+  if (!isGameRoundOver) return;
 
   if (currentRoundWinner === "draw") {
     outcomeText = "Draw!";
@@ -345,66 +524,97 @@ function displayWinner() {
     currentRoundWinner === "p2" ? (p2Wins += 1) : (cpuWins += 1);
   }
 
-  labelRoundOutcome.textContent = outcomeText;
+  console.log("Im here", currentRoundWinner, isGameRoundOver, outcomeText);
 
-  localStorage.setItem(
-    "ticTacDB",
-    JSON.stringify({ ...ticTacDB, p1Wins, p2Wins, cpuWins, ties })
-  );
+  labelRoundOutcome.textContent = outcomeText;
+  labelWinsTotalOpponent.textContent = opponent === "cpu" ? cpuWins : p2Wins;
+  labelWinsTotalPlayer.textContent = p1Wins;
+
+  const updatedData = {
+    p1Wins,
+    p2Wins,
+    cpuWins,
+    ties,
+  };
+  updateDB(updatedData);
 }
 
 /* ///////////////////////// */
 
 function restartGame() {
-  console.log(initialData);
   const modal = this.getAttribute("data-target");
-  localStorage.setItem("ticTacDB", JSON.stringify(initialData));
+  updateDB(initialData);
 
   ticTacDB = getDataFromDB();
 
   switchScreen("board");
-  // toggleModal(modal);
+  toggleModal(modal);
   setPlayerMark();
 }
 
 /* ///////////////////////// */
 
-function toggleModal(modal) {
-  if (!modal) return;
-
+function goToNextRound() {
   const ticTacDB = getDataFromDB();
+  let {
+    opponent,
+    p1Mark,
+    p1Wins,
+    p2Mark,
+    p2Wins,
+    cpuMark,
+    cpuWins,
+    ties,
+    nextRoundPlayerTurn,
+    currentRoundMoves,
+    currentPlayerTurn,
+  } = ticTacDB;
 
-  let isHidden = true;
+  if (!isGameRoundOver) return;
 
-  if (modal === "modal-restart") {
-    isHidden = modalGameRestart.classList.contains("is-hidden");
+  currentRoundMoves = 0;
+  currentPlayerTurn = nextRoundPlayerTurn;
+  nextRoundPlayerTurn = nextRoundPlayerTurn === "p1" ? opponent : "p1";
+  isGameRoundOver = false;
 
-    modalGameRestart.classList.toggle("is-hidden", !isHidden);
-  }
+  const updatedData = {
+    ...initialData,
+    p1Mark,
+    p1Wins,
+    p2Mark,
+    p2Wins,
+    ties,
+    cpuMark,
+    cpuWins,
+    opponent,
+    currentRoundMoves,
+    currentPlayerTurn,
+    nextRoundPlayerTurn,
+    isGameRoundOver,
+  };
 
-  if (modal === "modal-over") {
-    displayWinner();
-
-    isHidden = modalGameOver.classList.contains("is-hidden");
-    modalGameOver.classList.toggle("is-hidden", !isHidden);
-  }
-
-  modalOverlay.classList.toggle("is-hidden", !isHidden);
+  updateDB(updatedData);
+  toggleModal("modal-over");
+  displayGameBoard();
 }
 
 /* ///////////////////////// */
 
-function switchScreen(screen) {
-  if (!screen) throw new Error("provide a valid screen!");
-
-  menuScreen.classList.toggle("menu--hidden", screen === "menu");
-  boardScreen.classList.toggle("board--hidden", screen === "board");
-}
-
-// Events || Function Execution
+// Events & Controller
 connectDB();
 
-if (ticTacDB?.currentRoundMoves > 0) {
+if (
+  ticTacDB?.currentRoundMoves > 0 ||
+  ticTacDB?.cpuWins > 0 ||
+  ticTacDB?.p1Wins > 0 ||
+  ticTacDB?.p2Wins > 0
+) {
+  if (isGameRoundOver) {
+    toggleModal("modal-over");
+  }
+
+  ticTacDB?.currentPlayerTurn === "cpu" && handleCpuMovement();
+
   changeTurnMark();
   displayGameBoard();
   switchScreen("menu");
@@ -414,14 +624,14 @@ menuMarkInputs.forEach((input) =>
   input.addEventListener("change", setPlayerMark)
 );
 
-// menuStartGameButtons.forEach((btn) =>
-//   btn.addEventListener("click", startNewGame)
-// );
-menuStartGameButtons[0].addEventListener("click", startNewGame);
+menuStartGameButtons.forEach((btn) =>
+  btn.addEventListener("click", startNewGame)
+);
 
 modalToggleButtons.forEach((btn) =>
   btn.addEventListener("click", () => toggleModal("modal-restart"))
 );
 
-btnRestartGame.addEventListener("click", restartGame);
 btnQuitGame.addEventListener("click", restartGame);
+btnRestartGame.addEventListener("click", restartGame);
+btnNextRound.addEventListener("click", goToNextRound);

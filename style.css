@@ -444,19 +444,51 @@ label {
 .board__turn-mark--x::after {
     height: var(--size-xxs);
     width: 1.8rem;
-    animation: scaleX 0.35s cubic-bezier(0.6, -0.28, 0.74, 0.05) forwards;
+    animation: zoomOutX 0.35s cubic-bezier(0.6, -0.28, 0.74, 0.05) forwards;
 }
 
-@keyframes scaleX {
+@keyframes zoomOutX {
     0% {
-        height: 1rem;
-        width: 4.5rem;
+        height: 0.8rem;
+        width: 3rem;
     }
 
     100% {
         height: var(--size-xxs);
         width: 1.8rem;
     }
+}
+
+@keyframes zoomOutRingOuter {
+    0% {
+        width: 2.8rem;
+        height: 2.8rem;
+    }
+
+    100% {
+        width: 1.8rem;
+        height: 1.8rem;
+    }
+}
+
+@keyframes zoomOutRingInner {
+    0% {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    100% {
+        height: 0.7rem;
+        width: 0.7rem;
+    }
+}
+
+.board__turn-mark--ring::before {
+    animation: zoomOutRingOuter 0.35s cubic-bezier(0.6, -0.28, 0.74, 0.05) forwards;
+}
+
+.board__turn-mark--ring::after {
+    animation: zoomOutRingInner 0.35s cubic-bezier(0.6, -0.28, 0.74, 0.05) forwards;
 }
 
 .board__turn-mark--ring::before {
