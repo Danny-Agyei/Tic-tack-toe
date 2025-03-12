@@ -99,7 +99,6 @@ export function addSecondMoveIfOne(
 
     if (hasOnlyCpuMoves) {
       combinationWithOnlyCpuMoves = combination;
-      console.log("CPU Moves =>", combinationWithOnlyCpuMoves);
       break;
     }
   }
@@ -122,10 +121,8 @@ export function moveToAnyAvailableSpace(movements) {
   let randomMove = Math.floor(Math.random() * (8 - 0) + 0);
 
   if (movements[randomMove] !== null) {
-    console.log("Random =>", randomMove);
     movements.some((move, i) => {
       if (move === null) {
-        console.log("Move =>", i, movements[i]);
         movements[i] = "cpu";
         return true;
       }
