@@ -148,6 +148,10 @@ function switchScreen(screen) {
 
 function toggleModal(modal) {
   if (!modal) return;
+  const { isGameRoundOver, nextRoundPlayerTurn, p1Mark, p2Mark, cpuMark } =
+    ticTacDB;
+
+  const nextRoundMarkWrapper = document.getElementById("js-next-round-turn");
 
   let isHidden = true;
 
@@ -157,6 +161,26 @@ function toggleModal(modal) {
   } else if (modal === "modal-over") {
     isHidden = modalGameOver.classList.contains("is-hidden");
     modalGameOver.classList.toggle("is-hidden", !isHidden);
+
+    if (isGameRoundOver) {
+      const markEl = document.createElement("span");
+      const nextRoundMark =
+        nextRoundPlayerTurn === "p1"
+          ? p1Mark
+          : nextRoundPlayerTurn === "p2"
+          ? p2Mark
+          : cpuMark;
+
+      markEl.classList.add(
+        "modal__mark",
+        "input-mark",
+        `modal__${nextRoundMark}`,
+        `input-${nextRoundMark}`
+      );
+
+      nextRoundMarkWrapper.innerHTML = "";
+      nextRoundMarkWrapper.append(markEl);
+    }
   }
 
   modalOverlay.classList.toggle("is-hidden", !isHidden);
@@ -247,6 +271,7 @@ function displayGameBoard() {
       "input-mark",
       "board__moves-input"
     );
+
     moveInput.type = "radio";
     moveInput.id = `js-input${i}`;
     moveInput.setAttribute("data-position", i);
@@ -449,7 +474,6 @@ function checkForWinner(currentPlayer) {
 function displayWinner() {
   ticTacDB = getDataFromDB();
 
-  let outcomeText = "";
   let {
     opponent,
     p1Wins,
@@ -459,6 +483,7 @@ function displayWinner() {
     currentRoundWinner,
     isGameRoundOver,
   } = ticTacDB;
+  let outcomeText = "";
 
   if (!isGameRoundOver) return;
 
@@ -492,14 +517,12 @@ function displayWinner() {
   labelTiesTotal.textContent = ties;
   labelRoundOutcome.textContent = outcomeText;
 
-  const updatedData = {
+  updateDB({
     p1Wins,
     p2Wins,
     cpuWins,
     ties,
-  };
-
-  updateDB(updatedData);
+  });
 }
 
 /* ///////////////////////// */
@@ -577,6 +600,7 @@ if (
   ticTacDB?.ties > 0
 ) {
   if (isGameRoundOver) {
+    displayWinner();
     toggleModal("modal-over");
   }
 
