@@ -22,6 +22,13 @@ const labelWinsTitleOpponent = document.querySelector(
   "#js-wins-title-opponent"
 );
 
+import {
+  completeThreeMovesIfTwo,
+  blockPlayerThreeMove,
+  addSecondMoveIfOne,
+  moveToAnyAvailableSpace,
+} from "./cpuMovementHelper.js";
+
 const winningCombination = [
   [0, 1, 2],
   [0, 3, 6],
@@ -35,8 +42,8 @@ const winningCombination = [
 
 const initialData = {
   movements: Array.from({ length: 9 }, () => null),
-  nextRoundPlayerTurn: null,
   currentPlayerTurn: null,
+  nextRoundPlayerTurn: null,
   currentRoundMoves: 0,
   currentRoundWinner: null,
   isGameRoundOver: false,
@@ -206,16 +213,14 @@ function startNewGame() {
   changeTurnMark();
   displayGameBoard();
 
-  if (currentPlayerTurn === "cpu") {
-    setTimeout(() => {
-      handleCpuMovement();
-    }, 1200);
-  }
+  if (currentPlayerTurn === "cpu") handleCpuMovement();
 }
 
 /* ///////////////////////// */
 
 function displayGameBoard() {
+  ticTacDB = getDataFromDB();
+
   const {
     movements,
     opponent,
@@ -226,7 +231,7 @@ function displayGameBoard() {
     p2Wins,
     p1Wins,
     ties,
-  } = getDataFromDB();
+  } = ticTacDB;
 
   boardMovesContainer.innerHTML = "";
 
@@ -325,11 +330,9 @@ function handlePlayerMovement() {
   updateDB(updatedData);
   checkForWinner(currentPlayerTurn);
 
-  // if (currentRoundMoves < 9) {
-  setTimeout(() => {
+  if (currentPlayerTurn === "cpu") {
     handleCpuMovement();
-  }, 1200);
-  // }
+  }
 }
 
 /* ///////////////////////// */
@@ -337,108 +340,55 @@ function handlePlayerMovement() {
 function handleCpuMovement() {
   if (isGameRoundOver) return;
 
-  function moveToAnyAvailableSpace() {
-    let randomMove = Math.floor(Math.random() * (8 - 0) + 0);
-
-    if (movements[randomMove] !== null) {
-      return movements.some((move, i) => {
-        if (move === null) movements[i] = "cpu";
-      });
-    }
-
-    movements[randomMove] = "cpu";
-  }
-
-  function completeActiveCombination() {
-    let hasOnlyCpuMoves = false;
-    let combinationWithOnlyCpuMoves = [];
-
-    for (const combination of winningCombination) {
-      cpuMovements.forEach((move) => {
-        if (combination.includes(move)) {
-          hasOnlyCpuMoves = combination.every(
-            (comb) => movements[comb] !== "p1"
-          );
-        }
-      });
-
-      if (hasOnlyCpuMoves) {
-        combinationWithOnlyCpuMoves = combination;
-        break;
-      }
-    }
-
-    combinationWithOnlyCpuMoves.some((i) => {
-      if (movements[i] !== "cpu") {
-        movements[i] = "cpu";
-        return true;
-      }
-    });
-  }
-
-  function blockPlayerCombination() {
-    let combinationWithOnlyPlayerMoves = [];
-    let numOfPlayerAppearance = 0;
-
-    for (const combination of winningCombination) {
-      playerMovements.forEach((move) => {
-        if (combination.includes(move)) {
-          combinationWithOnlyPlayerMoves = combination;
-        }
-      });
-
-      combinationWithOnlyPlayerMoves.forEach((move) => {
-        movements[move] === "p1" && ++numOfPlayerAppearance;
-        movements[move] === "cpu" && --numOfPlayerAppearance;
-      });
-
-      if (numOfPlayerAppearance === 2) {
-        combinationWithOnlyPlayerMoves.forEach((move) => {
-          if (movements[move] === null) movements[move] = "cpu";
-        });
-
-        break;
-      } else {
-        numOfPlayerAppearance = 0;
-        combinationWithOnlyPlayerMoves = [];
-      }
-    }
-
-    return combinationWithOnlyPlayerMoves.length > 0;
-  }
-
   ticTacDB = getDataFromDB();
   let { currentPlayerTurn, currentRoundMoves, movements } = ticTacDB;
 
-  const getPlayerMovements = (player) => {
+  const getMovements = (player) => {
     return movements
       .map((move, i) => move === player && i)
       .filter((i) => typeof i === "number");
   };
 
-  const playerMovements = getPlayerMovements("p1");
-  const cpuMovements = getPlayerMovements("cpu");
+  const playerMovements = getMovements("p1");
+  const cpuMovements = getMovements("cpu");
 
-  if (currentRoundMoves < 2 || currentRoundMoves === 8) {
-    moveToAnyAvailableSpace();
-  } else {
-    // Check and block player combination
-    const hasBlockMove = blockPlayerCombination();
+  setTimeout(() => {
+    const hasCompleted = completeThreeMovesIfTwo(
+      movements,
+      winningCombination,
+      cpuMovements
+    );
 
-    !hasBlockMove && completeActiveCombination();
-  }
+    if (!hasCompleted) {
+      const hasBlocked = blockPlayerThreeMove(
+        movements,
+        winningCombination,
+        playerMovements
+      );
 
-  currentRoundMoves += 1;
+      if (!hasBlocked) {
+        const secondMoveAdded = addSecondMoveIfOne(
+          movements,
+          winningCombination,
+          cpuMovements
+        );
 
-  const updatedData = {
-    movements,
-    currentPlayerTurn: "p1",
-    currentRoundMoves,
-  };
+        if (!secondMoveAdded) moveToAnyAvailableSpace(movements);
+      }
+    }
 
-  updateDB(updatedData);
-  displayGameBoard();
-  checkForWinner(currentPlayerTurn);
+    currentRoundMoves += 1;
+
+    const updatedData = {
+      movements,
+      currentPlayerTurn: "p1",
+      currentRoundMoves,
+    };
+
+    updateDB(updatedData);
+    displayGameBoard();
+    checkForWinner(currentPlayerTurn);
+  }, 1200);
 }
 
 /* ///////////////////////// */
@@ -482,7 +432,6 @@ function checkForWinner(currentPlayer) {
 
   if (currentRoundMoves === 9 && !isGameRoundOver) {
     isGameRoundOver = true;
-    console.log("first");
 
     updateDB({
       isGameRoundOver,
@@ -513,22 +462,30 @@ function displayWinner() {
 
   if (!isGameRoundOver) return;
 
-  if (currentRoundWinner === "draw") {
-    outcomeText = "Draw!";
-    ties += 1;
-  } else if (currentRoundWinner === "p1") {
-    outcomeText = "Yey, You Won!";
-    p1Wins += 1;
-  } else {
-    outcomeText = "Oh, You Lose!";
-    currentRoundWinner === "p2" ? (p2Wins += 1) : (cpuWins += 1);
+  switch (currentRoundWinner) {
+    case "draw":
+      outcomeText = "Draw!";
+      ties += 1;
+      break;
+
+    case "p1":
+      outcomeText = opponent === "p2" ? "P1 Wins!" : "Yey, You Won!";
+      p1Wins += 1;
+      break;
+
+    case "p2":
+      outcomeText = "P2 Wins!";
+      p2Wins += 1;
+      break;
+
+    default:
+      break;
   }
 
-  console.log("Im here", currentRoundWinner, isGameRoundOver, outcomeText);
-
-  labelRoundOutcome.textContent = outcomeText;
   labelWinsTotalOpponent.textContent = opponent === "cpu" ? cpuWins : p2Wins;
   labelWinsTotalPlayer.textContent = p1Wins;
+  labelTiesTotal.textContent = ties;
+  labelRoundOutcome.textContent = outcomeText;
 
   const updatedData = {
     p1Wins,
@@ -536,6 +493,7 @@ function displayWinner() {
     cpuWins,
     ties,
   };
+
   updateDB(updatedData);
 }
 
@@ -555,7 +513,7 @@ function restartGame() {
 /* ///////////////////////// */
 
 function goToNextRound() {
-  const ticTacDB = getDataFromDB();
+  ticTacDB = getDataFromDB();
   let {
     opponent,
     p1Mark,
@@ -596,6 +554,9 @@ function goToNextRound() {
   updateDB(updatedData);
   toggleModal("modal-over");
   displayGameBoard();
+  changeTurnMark();
+
+  if (currentPlayerTurn === "cpu") handleCpuMovement();
 }
 
 /* ///////////////////////// */
@@ -607,7 +568,8 @@ if (
   ticTacDB?.currentRoundMoves > 0 ||
   ticTacDB?.cpuWins > 0 ||
   ticTacDB?.p1Wins > 0 ||
-  ticTacDB?.p2Wins > 0
+  ticTacDB?.p2Wins > 0 ||
+  ticTacDB?.ties > 0
 ) {
   if (isGameRoundOver) {
     toggleModal("modal-over");
@@ -615,9 +577,9 @@ if (
 
   ticTacDB?.currentPlayerTurn === "cpu" && handleCpuMovement();
 
-  changeTurnMark();
   displayGameBoard();
   switchScreen("menu");
+  changeTurnMark();
 }
 
 menuMarkInputs.forEach((input) =>
