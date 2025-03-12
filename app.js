@@ -330,7 +330,7 @@ function handlePlayerMovement() {
   updateDB(updatedData);
   checkForWinner(currentPlayerTurn);
 
-  if (currentPlayerTurn === "cpu") {
+  if (getDataFromDB().currentPlayerTurn === "cpu") {
     handleCpuMovement();
   }
 }
@@ -466,6 +466,11 @@ function displayWinner() {
     case "draw":
       outcomeText = "Draw!";
       ties += 1;
+      break;
+
+    case "cpu":
+      outcomeText = "Oh, You Lose!";
+      cpuWins += 1;
       break;
 
     case "p1":
