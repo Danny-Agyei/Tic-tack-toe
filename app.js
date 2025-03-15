@@ -57,8 +57,23 @@ const initialData = {
   ties: 0,
 };
 
+const clickAudio = new Audio("./click.wav");
+const LoseAudio = new Audio("./lose.mp3");
+const winAudio = new Audio("./winners.mp3");
 let isGameRoundOver = false;
 let ticTacDB;
+
+function playSound(type) {
+  if (type === "click") {
+    clickAudio.play();
+  }
+  if (type === "win") {
+    winAudio.play();
+  }
+  if (type === "lose") {
+    LoseAudio.play();
+  }
+}
 
 /* ///////////////////////// */
 
@@ -348,12 +363,10 @@ function handlePlayerMovement() {
     currentRoundMoves,
   };
 
-  document
-    .getElementById(`js-input${movePos}`)
-    .classList.add(`board__moves-${playerMark}`);
-
+  playSound("click");
   updateDB(updatedData);
   checkForWinner(currentPlayerTurn);
+  displayGameBoard();
 
   if (getDataFromDB().currentPlayerTurn === "cpu") {
     handleCpuMovement();
@@ -410,6 +423,7 @@ function handleCpuMovement() {
       currentRoundMoves,
     };
 
+    playSound("click");
     updateDB(updatedData);
     displayGameBoard();
     checkForWinner(currentPlayerTurn);
@@ -423,7 +437,7 @@ function checkForWinner(currentPlayer) {
 
   if (!currentPlayer || !ticTacDB) return;
 
-  let { movements, currentRoundWinner, currentRoundMoves } = ticTacDB;
+  let { movements, currentRoundMoves } = ticTacDB;
   let matchedWinningCombination = [];
 
   const playerSelectedMoves = movements
@@ -512,17 +526,23 @@ function displayWinner() {
       break;
   }
 
-  labelWinsTotalOpponent.textContent = opponent === "cpu" ? cpuWins : p2Wins;
-  labelWinsTotalPlayer.textContent = p1Wins;
-  labelTiesTotal.textContent = ties;
-  labelRoundOutcome.textContent = outcomeText;
-
   updateDB({
     p1Wins,
     p2Wins,
     cpuWins,
     ties,
   });
+
+  labelWinsTotalOpponent.textContent = opponent === "cpu" ? cpuWins : p2Wins;
+  labelWinsTotalPlayer.textContent = p1Wins;
+  labelTiesTotal.textContent = ties;
+  labelRoundOutcome.textContent = outcomeText;
+
+  if (outcomeText === "Yey, You Won!") {
+    playSound("win");
+  } else if (outcomeText === "Oh, You Lose!") {
+    playSound("lose");
+  }
 }
 
 /* ///////////////////////// */
