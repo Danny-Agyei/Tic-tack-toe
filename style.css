@@ -1,41 +1,3 @@
-/*
- - Date started: Feb 26th 2025
- - Time: 2pm
-*/
-
-@font-face {
-    font-display: swap;
-    font-family: "Cera Round Pro";
-    font-style: normal;
-    font-weight: 400;
-    src: url("/ceraroundpro-regular.woff2") format("woff2");
-}
-
-@font-face {
-    font-display: swap;
-    font-family: "Cera Round Pro";
-    font-style: normal;
-    font-weight: 500;
-    src: url("/ceraroundpro-medium.woff2") format("woff2");
-}
-
-@font-face {
-    font-display: swap;
-    font-family: "Cera Round Pro";
-    font-style: normal;
-    font-weight: 600;
-    src: url("/ceraroundpro-bold.woff2") format("woff2");
-}
-
-@font-face {
-    font-display: swap;
-    font-family: "Cera Round Pro";
-    font-style: normal;
-    font-weight: 900;
-    src: url("/ceraroundpro-black.woff2") format("woff2");
-}
-
-
 :root {
     --clr-primary-900: hsl(199.2deg 32.47% 15.1%);
     --clr-primary-500: hsl(197.65deg 36.17% 18.43%);
@@ -77,7 +39,7 @@
 }
 
 html {
-    font-family: 'Ceras Round Pro', 'inter', Arial, Helvetica, sans-serif;
+    font-family: 'inter', Arial, Helvetica, sans-serif;
     font-size: 0.625rem;
 }
 

@@ -58,7 +58,7 @@ const initialData = {
 };
 
 const clickAudio = new Audio("./click.wav");
-const LoseAudio = new Audio("./lose.mp3");
+const loseAudio = new Audio("./lose.mp3");
 const winAudio = new Audio("./winners.mp3");
 let isGameRoundOver = false;
 let ticTacDB;
@@ -67,15 +67,16 @@ function playSound(type) {
   if (type === "click") {
     clickAudio.play();
   }
-  if (type === "win") {
-    winAudio.play();
-  }
-  if (type === "lose") {
-    LoseAudio.play();
-  }
-}
 
-/* ///////////////////////// */
+  setTimeout(() => {
+    if (type === "win") {
+      winAudio.play();
+    }
+    if (type === "lose") {
+      loseAudio.play();
+    }
+  }, 150);
+}
 
 function connectDB() {
   if (!localStorage.getItem("ticTacDB")) {
@@ -86,15 +87,11 @@ function connectDB() {
   isGameRoundOver = ticTacDB.isGameRoundOver;
 }
 
-/* ///////////////////////// */
-
 function getDataFromDB() {
   if (!localStorage.getItem("ticTacDB")) throw Error("Failed to retrieve Data");
 
   return JSON.parse(localStorage.getItem("ticTacDB"));
 }
-
-/* ///////////////////////// */
 
 function updateDB(data) {
   if (!data) return;
@@ -104,8 +101,6 @@ function updateDB(data) {
 
   ticTacDB = getDataFromDB();
 }
-
-/* ///////////////////////// */
 
 function setPlayerMark() {
   let playerSelectedMark = "mark--ring";
@@ -128,8 +123,6 @@ function setPlayerMark() {
   ticTacDB.p1Mark = playerSelectedMark;
 }
 
-/* ///////////////////////// */
-
 function changeTurnMark() {
   const turnPlayerMark = document.querySelector(".board__turn-mark");
   ticTacDB = getDataFromDB();
@@ -150,16 +143,12 @@ function changeTurnMark() {
   boardTurn.insertAdjacentHTML("afterbegin", html);
 }
 
-/* ///////////////////////// */
-
 function switchScreen(screen) {
   if (!screen) return;
 
   menuScreen.classList.toggle("menu--hidden", screen === "menu");
   boardScreen.classList.toggle("board--hidden", screen === "board");
 }
-
-/* ///////////////////////// */
 
 function toggleModal(modal) {
   if (!modal) return;
@@ -200,8 +189,6 @@ function toggleModal(modal) {
 
   modalOverlay.classList.toggle("is-hidden", !isHidden);
 }
-
-/* ///////////////////////// */
 
 function startNewGame() {
   const opponent = this.getAttribute("data-opponent");
@@ -254,8 +241,6 @@ function startNewGame() {
 
   if (currentPlayerTurn === "cpu") handleCpuMovement();
 }
-
-/* ///////////////////////// */
 
 function displayGameBoard() {
   ticTacDB = getDataFromDB();
@@ -314,43 +299,16 @@ function displayGameBoard() {
   labelWinsTotalOpponent.textContent = opponent === "cpu" ? cpuWins : p2Wins;
   labelWinsTotalPlayer.textContent = p1Wins;
   labelTiesTotal.textContent = ties;
-}
 
-/* ///////////////////////// */
+  preventDoubleMove();
+}
 
 function handlePlayerMovement() {
   if (isGameRoundOver) return;
 
   const ticTacDB = getDataFromDB();
 
-  let {
-    opponent,
-    p1Mark,
-    p2Mark,
-    cpuMark,
-    currentPlayerTurn,
-    currentRoundMoves,
-    movements,
-  } = ticTacDB;
-
-  let playerMark;
-
-  switch (currentPlayerTurn) {
-    case "p1":
-      playerMark = p1Mark;
-      break;
-
-    case "p2":
-      playerMark = p2Mark;
-      break;
-
-    case "cpu":
-      playerMark = cpuMark;
-      break;
-
-    default:
-      break;
-  }
+  let { opponent, currentPlayerTurn, currentRoundMoves, movements } = ticTacDB;
 
   const movePos = this.getAttribute("data-position");
 
@@ -372,8 +330,6 @@ function handlePlayerMovement() {
     handleCpuMovement();
   }
 }
-
-/* ///////////////////////// */
 
 function handleCpuMovement() {
   if (isGameRoundOver) return;
@@ -430,7 +386,17 @@ function handleCpuMovement() {
   }, 1200);
 }
 
-/* ///////////////////////// */
+function preventDoubleMove() {
+  const movementInputs = document.querySelectorAll(".js-moves-input");
+
+  const activeMovementsInputs = [...movementInputs].filter(
+    (input) => !input.checked
+  );
+
+  if (ticTacDB?.currentPlayerTurn === "cpu") {
+    activeMovementsInputs.forEach((input) => (input.disabled = true));
+  }
+}
 
 function checkForWinner(currentPlayer) {
   ticTacDB = getDataFromDB();
@@ -482,8 +448,6 @@ function checkForWinner(currentPlayer) {
 
   if (!isGameRoundOver) changeTurnMark();
 }
-
-/* ///////////////////////// */
 
 function displayWinner() {
   ticTacDB = getDataFromDB();
@@ -538,14 +502,16 @@ function displayWinner() {
   labelTiesTotal.textContent = ties;
   labelRoundOutcome.textContent = outcomeText;
 
-  if (outcomeText === "Yey, You Won!") {
+  if (
+    outcomeText === "Yey, You Won!" ||
+    outcomeText === "P1 Wins!" ||
+    outcomeText === "P2 Wins!"
+  ) {
     playSound("win");
   } else if (outcomeText === "Oh, You Lose!") {
     playSound("lose");
   }
 }
-
-/* ///////////////////////// */
 
 function restartGame() {
   const modal = this.getAttribute("data-target");
@@ -557,8 +523,6 @@ function restartGame() {
   toggleModal(modal);
   setPlayerMark();
 }
-
-/* ///////////////////////// */
 
 function goToNextRound() {
   ticTacDB = getDataFromDB();
@@ -607,9 +571,7 @@ function goToNextRound() {
   if (currentPlayerTurn === "cpu") handleCpuMovement();
 }
 
-/* ///////////////////////// */
-
-// Events & Controller
+// Events & Function execution
 connectDB();
 
 if (
